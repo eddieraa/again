@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -129,7 +130,13 @@ func (a *Again) Listen(name string, ls net.Listener) error {
 	if !fdField.IsValid() {
 		return fmt.Errorf("Not supported by current Go version")
 	}
-	fd := uintptr(fdField.Int())
+	var fd uintptr
+	if runtime.GOOS == "windows" {
+		fd = uintptr(fdField.Uint())
+	} else {
+		fd = uintptr(fdField.Int())
+	}
+
 	a.services.Store(name, &Service{
 		Name:       name,
 		FdName:     ListerName(ls),
